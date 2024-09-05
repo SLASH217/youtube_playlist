@@ -12,7 +12,7 @@ class YouTubeAPIManager:
         self,
         credentials_file="credentials.json",
         token_file="token.json",
-        scopes=["https://www.googleapis.com/auth/youtube.readonly"],
+        scopes=["https://www.googleapis.com/auth/youtube"],
     ):
         self.credentials_file = credentials_file
         self.token_file = token_file
@@ -60,24 +60,58 @@ class YouTubeAPIManager:
             if not page_token:
                 break
         return items
+    def remove_video_from_playlist(self, playlist_id, video_id):
+        """Remove a video from the playlist"""
+        playlist_items = self.get_playlist_items(playlist_id)
+        for item in playlist_items:
+            if item["contentDetails"]["videoId"] == video_id:
+                request = self.youtube.playlistItems().delete(
+                    id=item["id"]
+                )
+                response = request.execute()
+                print(f"Removed video {video_id} from playlist.")
+    
+    def remove_deleted_videos(self, playlist_id):
+        """Remove deleted or private videos from the playlist"""
+        playlist_items = self.get_playlist_items(playlist_id)
+        for item in playlist_items:
+            title = item["snippet"]["title"]
+            if title in ["Deleted video", "Private video"]:
+                video_id = item["contentDetails"]["videoId"]
+                self.remove_video_from_playlist(playlist_id, video_id)
+                print(f"Removed {title} from playlist.")
 
 
 # Usage example:
-
+def parse_video_title(title):
+    """Parse the video title to separate the artist and song name."""
+    if " - " in title:
+        artist, song = title.split(" - ", 1)  # Split into artist and song
+        return artist.strip(), song.strip()   # Remove extra spaces
+    else:
+        return None, title.strip()        
 if __name__ == "__main__":
     PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your playlist ID
     youtube_manager = YouTubeAPIManager()
     youtube_manager.authenticate()
+    youtube_manager.remove_deleted_videos(PLAYLIST_ID)
     playlist_items = youtube_manager.get_playlist_items(PLAYLIST_ID)
 
     # Writing to CSV file efficiently
     with open("playlist_data.csv", "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Title", "Video ID"])
+        # Write header row
+        writer.writerow(["Title", "Video ID", "Artist", "Song"])
 
         for item in playlist_items:
             title = item["snippet"]["title"]
             video_id = item["contentDetails"]["videoId"]
-            writer.writerow([title, video_id])
+            
+            # Parse artist and song from title
+            artist, song = parse_video_title(title)
+            
+            # Write to CSV: include artist as "Unknown" if it's None
+            writer.writerow([title, video_id, artist if artist else "Unknown", song])
 
-    print(f"Data for {len(playlist_items)} videos saved to 'playlist_data.csv'.")
+print("Playlist data written to 'playlist_data.csv' successfully.")
+print(f"Data for {len(playlist_items)} videos saved to 'playlist_data.csv'.")
