@@ -1,48 +1,20 @@
-import os
 import csv
-import json
-import google.auth
-import google_auth_oauthlib.flow
-import googleapiclient.discovery
-import googleapiclient.errors
+from authenticate import (
+    YouTubeAPIManager,
+)
 
 
-class YouTubeAPIManager:
-    def __init__(
-        self,
-        credentials_file="credentials.json",
-        token_file="token.json",
-        scopes=["https://www.googleapis.com/auth/youtube"],
-    ):
-        self.credentials_file = credentials_file
-        self.token_file = token_file
-        self.scopes = scopes
-        self.credentials = None
-        self.youtube = None
+class PlaylistManager(YouTubeAPIManager):
+    """Has the methods:
+    - get_playlist : gets all the videos in a playlist
+    - remove deleted or private videos from playlist
 
-    def authenticate(self):
-        # Authenticate the user with OAuth 2.0
-        if os.path.exists(self.token_file):
-            with open(self.token_file, "r", encoding="utf-8") as token:
-                self.credentials = (
-                    google.oauth2.credentials.Credentials.from_authorized_user_info(
-                        json.load(token), self.scopes
-                    )
-                )
-        else:
-            flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-                self.credentials_file, self.scopes
-            )
-            self.credentials = flow.run_local_server(port=0)
-            with open(self.token_file, "w", encoding="utf-8") as token:
-                token.write(self.credentials.to_json())
-
-        # Build the YouTube service
-        self.youtube = googleapiclient.discovery.build(
-            "youtube", "v3", credentials=self.credentials
-        )
+    Args:
+        YouTubeAPIManager (Class): Takes in all the authenticator data for YouTube API
+    """
 
     def get_playlist_items(self, plist_id):
+        """Gets all the videos in a playlist"""
         # Fetch items in the playlist
         items = []
         page_token = None
@@ -60,17 +32,16 @@ class YouTubeAPIManager:
             if not page_token:
                 break
         return items
+
     def remove_video_from_playlist(self, playlist_id, video_id):
         """Remove a video from the playlist"""
         playlist_items = self.get_playlist_items(playlist_id)
         for item in playlist_items:
             if item["contentDetails"]["videoId"] == video_id:
-                request = self.youtube.playlistItems().delete(
-                    id=item["id"]
-                )
-                response = request.execute()
+                request = self.youtube.playlistItems().delete(id=item["id"])
+                request.execute()
                 print(f"Removed video {video_id} from playlist.")
-    
+
     def remove_deleted_videos(self, playlist_id):
         """Remove deleted or private videos from the playlist"""
         playlist_items = self.get_playlist_items(playlist_id)
@@ -82,20 +53,22 @@ class YouTubeAPIManager:
                 print(f"Removed {title} from playlist.")
 
 
-# Usage example:
 def parse_video_title(title):
     """Parse the video title to separate the artist and song name."""
     if " - " in title:
-        artist, song = title.split(" - ", 1)  # Split into artist and song
-        return artist.strip(), song.strip()   # Remove extra spaces
+        artist, song = title.split("-", 1)  # Split into artist and song
+        return artist.strip(), song.strip()  # Remove extra spaces
     else:
-        return None, title.strip()        
+        return None, title.strip()
+
+
 if __name__ == "__main__":
     PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your playlist ID
-    youtube_manager = YouTubeAPIManager()
-    youtube_manager.authenticate()
-    youtube_manager.remove_deleted_videos(PLAYLIST_ID)
-    playlist_items = youtube_manager.get_playlist_items(PLAYLIST_ID)
+    playlist_manager = PlaylistManager()  # Inherit from YouTubeAPIManager
+    playlist_manager.authenticate()  # Authenticate with OAuth
+
+    # Fetch playlist items
+    playlistItems = playlist_manager.get_playlist_items(PLAYLIST_ID)
 
     # Writing to CSV file efficiently
     with open("playlist_data.csv", "w", newline="", encoding="utf-8") as csvfile:
@@ -103,15 +76,15 @@ if __name__ == "__main__":
         # Write header row
         writer.writerow(["Title", "Video ID", "Artist", "Song"])
 
-        for item in playlist_items:
-            title = item["snippet"]["title"]
-            video_id = item["contentDetails"]["videoId"]
-            
-            # Parse artist and song from title
-            artist, song = parse_video_title(title)
-            
-            # Write to CSV: include artist as "Unknown" if it's None
-            writer.writerow([title, video_id, artist if artist else "Unknown", song])
+        for Item in playlistItems:
+            Title = Item["snippet"]["title"]
+            videoId = Item["contentDetails"]["videoId"]
 
-print("Playlist data written to 'playlist_data.csv' successfully.")
-print(f"Data for {len(playlist_items)} videos saved to 'playlist_data.csv'.")
+            # Parse artist and song from title
+            Artist, Song = parse_video_title(Title)
+
+            # Write to CSV: include Artist as "Unknown" if it's None
+            writer.writerow([Title, videoId, Artist if Artist else "Unknown", Song])
+
+    print("Playlist data written to 'playlist_data.csv' successfully.")
+    print(f"Data for {len(playlistItems)} videos saved to 'playlist_data.csv'.")
