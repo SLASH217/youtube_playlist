@@ -120,7 +120,7 @@ class YouTubePlaylistManager(YouTubeAPIManager):
 
 
 # Example usage
-if __name__ == "__main__":
+def main():
     playlist_id = (
         "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your YouTube playlist ID
     )
@@ -136,3 +136,7 @@ if __name__ == "__main__":
 
     # Visualize video statistics
     youtube_manager.visualize_statistics(video_stats_df)
+
+
+if __name__ == "__main__":
+    main()

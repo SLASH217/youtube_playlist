@@ -12,12 +12,12 @@ class AutomateNew(YouTubeAPIManager):
     """
 
     def get_playlist_items(self, playlist_id):
-        """Get the items of a playlist"""
+        """Get the items of a playlist GETS ITEMS FROM POPULAR PLAYLIST"""
         # Fetch items in the playlist
         request = self.youtube.playlistItems().list(
             part="snippet,contentDetails",
             playlistId=playlist_id,
-            maxResults=10,  # Adjust as needed, max is 50 per request
+            maxResults=50,  # Adjust as needed, max is 50 per request
         )
         response = request.execute()
         return response["items"]
@@ -76,26 +76,26 @@ class AutomateNew(YouTubeAPIManager):
 
 
 # Usage example:
-if __name__ == "__main__":
+def main():
     PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Your playlist ID
     FROM_PLAYLIST_ID = "PL3-sRm8xAzY9gpXTMGVHJWy_FMD67NBed"  # Famous playlist ID
     youtube_manager = AutomateNew()
     youtube_manager.authenticate()
 
     # Step 1: Get the items from the famous playlist
-    playlistItems = youtube_manager.get_playlist_items(FROM_PLAYLIST_ID)
+    # playlistItems = youtube_manager.get_playlist_items(FROM_PLAYLIST_ID)
 
-    # Step 2: Add the songs from the famous playlist to your playlist
-    for Item in playlistItems:
-        videoTitle = Item["snippet"]["title"]
-        videoId = Item["contentDetails"]["videoId"]
-        print(f"Adding {videoTitle} to your playlist.")
-        youtube_manager.add_song_to_playlist(PLAYLIST_ID, videoId)
+    # # Step 2: Add the songs from the famous playlist to your playlist
+    # for Item in playlistItems:
+    #     videoTitle = Item["snippet"]["title"]
+    #     videoId = Item["contentDetails"]["videoId"]
+    #     print(f"Adding {videoTitle} to your playlist.")
+    #     youtube_manager.add_song_to_playlist(PLAYLIST_ID, videoId)
 
-    # # Add songs from another playlist, omitting certain indexes
-    # omitIndexes = [0, 1, 2, 3, 4]  # Example indexes to omit
-    # youtube_manager.add_playlist_songs_omit(FROM_PLAYLIST_ID, PLAYLIST_ID, omitIndexes)
-    # print("Songs from the famous playlist added successfully.")
+    # Add songs from another playlist, omitting certain indexes
+    omitIndexes = list(range(0,11))  # Example indexes to omit
+    youtube_manager.add_playlist_songs_omit(FROM_PLAYLIST_ID, PLAYLIST_ID, omitIndexes)
+    print("Songs from the famous playlist added successfully.")
     # # Define your target indexes
     # targetIndexes = [1, 3, 5]
 
@@ -103,3 +103,7 @@ if __name__ == "__main__":
     # youtube_manager.add_playlist_songs_target(
     #     FROM_PLAYLIST_ID, PLAYLIST_ID, targetIndexes
     # )
+
+
+if __name__ == "__main__":
+    main()

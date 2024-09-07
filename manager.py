@@ -1,4 +1,5 @@
-import csv
+import pandas as pd
+import os
 from authenticate import (
     YouTubeAPIManager,
 )
@@ -13,8 +14,11 @@ class PlaylistManager(YouTubeAPIManager):
         YouTubeAPIManager (Class): Takes in all the authenticator data for YouTube API
     """
 
+    def __init__(self, credentials_file="credentials.json", token_file="token.json"):
+        super().__init__(credentials_file, token_file)
+
     def get_playlist_items(self, plist_id):
-        """Gets all the videos in a playlist"""
+        """Gets all the videos in a playlist SPECIFICALLY FOR MY PLAYLIST"""
         # Fetch items in the playlist
         items = []
         page_token = None
@@ -34,7 +38,7 @@ class PlaylistManager(YouTubeAPIManager):
         return items
 
     def remove_video_from_playlist(self, playlist_id, video_id):
-        """Remove a video from the playlist"""
+        """Remove a video from the playlist FUCTION USED IN remove_deleted_videos function"""
         playlist_items = self.get_playlist_items(playlist_id)
         for item in playlist_items:
             if item["contentDetails"]["videoId"] == video_id:
@@ -55,14 +59,14 @@ class PlaylistManager(YouTubeAPIManager):
 
 def parse_video_title(title):
     """Parse the video title to separate the artist and song name."""
-    if " - " in title:
+    if "-" in title: 
         artist, song = title.split("-", 1)  # Split into artist and song
         return artist.strip(), song.strip()  # Remove extra spaces
     else:
         return None, title.strip()
 
 
-if __name__ == "__main__":
+def main():
     PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your playlist ID
     playlist_manager = PlaylistManager()  # Inherit from YouTubeAPIManager
     playlist_manager.authenticate()  # Authenticate with OAuth
@@ -70,21 +74,32 @@ if __name__ == "__main__":
     # Fetch playlist items
     playlistItems = playlist_manager.get_playlist_items(PLAYLIST_ID)
 
-    # Writing to CSV file efficiently
-    with open("playlist_data.csv", "w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.writer(csvfile)
-        # Write header row
-        writer.writerow(["Title", "Video ID", "Artist", "Song"])
+    data = []
+    for item in playlistItems:
+        title = item["snippet"]["title"]
+        video_id = item["contentDetails"]["videoId"]
 
-        for Item in playlistItems:
-            Title = Item["snippet"]["title"]
-            videoId = Item["contentDetails"]["videoId"]
+        # Parse artist and song from title
+        artist, song = parse_video_title(title)
 
-            # Parse artist and song from title
-            Artist, Song = parse_video_title(Title)
+        # Append to data list
+        data.append([title, video_id, artist if artist else "Unknown", song])
 
-            # Write to CSV: include Artist as "Unknown" if it's None
-            writer.writerow([Title, videoId, Artist if Artist else "Unknown", Song])
+    # Create DataFrame
+    df = pd.DataFrame(data, columns=["Title", "Video ID", "Artist", "Song"])
 
-    print("Playlist data written to 'playlist_data.csv' successfully.")
-    print(f"Data for {len(playlistItems)} videos saved to 'playlist_data.csv'.")
+    # File path
+    file_path = "playlist_data.csv"
+
+    # Write to CSV file only if it doesn't already exist
+    if not os.path.exists(file_path):
+        df.to_csv(file_path, index=False, encoding="utf-8")
+        print(f"Playlist data written to '{file_path}' successfully.")
+    else:
+        print(f"'{file_path}' already exists. No data was written.")
+
+    print(f"Data for {len(playlistItems)} videos saved to '{file_path}'.")
+
+
+if __name__ == "__main__":
+    main()
