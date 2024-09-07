@@ -163,7 +163,7 @@ class YouTubePlaylistManager(YouTubeAPIManager):
 
 # Example usage
 if __name__ == "__main__":
-    playlist_id = "YOUR_PLAYLIST_ID"  # Replace with your YouTube playlist ID
+    playlist_id = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your YouTube playlist ID
 
     # Create a YouTubePlaylistManager instance
     youtube_manager = YouTubePlaylistManager()
