@@ -122,6 +122,7 @@ def main():
     youtube_manager = YouTubePlaylistManager()
     playlist_manager = PlaylistManager()
     automate_new = AutomateNew()
+    
 
     # Authenticate each manager (assuming they all have authenticate methods)
     youtube_manager.authenticate()
