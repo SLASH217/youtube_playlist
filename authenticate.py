@@ -5,6 +5,9 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class YouTubeAPIManager:
@@ -14,8 +17,8 @@ class YouTubeAPIManager:
 
     def __init__(
         self,
-        credentials_file="credentials.json",
-        token_file="token.json",
+        credentials_file=os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials.json"),
+        token_file=os.getenv("GOOGLE_TOKEN_FILE", "token.json"),
         scopes=("https://www.googleapis.com/auth/youtube"),
     ):
         self.credentials_file = credentials_file
