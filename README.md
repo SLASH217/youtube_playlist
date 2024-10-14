@@ -86,9 +86,9 @@ STATS_OUTPUT_CSV: Output file for video statistics.
 NUMBER_OF_SONGS_TO_ADD: Limit for new songs to be added.
 Logging
 Tracks operations and errors to assist in debugging.
-/YouTubePlaylistManager
+"/YouTubePlaylistManager
 │
-├── Video_stats.py # YouTube playlist statistics handling logic
+├──Video_stats.py # YouTube playlist statistics handling logic
 ├── manager.py # General playlist management and parsing logic
 ├── new_releases.py # Automated fetching and addition of new songs
 ├── playlist_data.csv # Playlist song data (generated if not present)
@@ -97,6 +97,7 @@ Tracks operations and errors to assist in debugging.
 ├── clean_playlist_stats.csv # Cleaned playlist statistics data file
 ├── README.md # Project documentation (this file)
 └── project.py # Main script integrating all functionalities
+"
 Running the Program
 Execute: python project.py
 Follow Prompts: Use the console menu to select operations.
