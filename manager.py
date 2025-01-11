@@ -19,7 +19,6 @@ class PlaylistManager(YouTubeAPIManager):
 
     def get_playlist_items(self, plist_id):
         """Gets all the videos in a playlist SPECIFICALLY FOR MY PLAYLIST"""
-        # Fetch items in the playlist
         items = []
         page_token = None
         while True:
@@ -27,7 +26,7 @@ class PlaylistManager(YouTubeAPIManager):
                 part="snippet,contentDetails",
                 playlistId=plist_id,
                 maxResults=50,  # Max is 50 per request
-                pageToken=page_token,  # Include the page token to get all items
+                pageToken=page_token,
             )
             response = request.execute()
             items.extend(response["items"])
@@ -59,19 +58,18 @@ class PlaylistManager(YouTubeAPIManager):
 
 def parse_video_title(title):
     """Parse the video title to separate the artist and song name."""
-    if "-" in title: 
-        artist, song = title.split("-", 1)  # Split into artist and song
-        return artist.strip(), song.strip()  # Remove extra spaces
+    if "-" in title:
+        artist, song = title.split("-", 1)
+        return artist.strip(), song.strip()
     else:
         return None, title.strip()
 
 
 def main():
-    PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp"  # Replace with your playlist ID
-    playlist_manager = PlaylistManager()  # Inherit from YouTubeAPIManager
-    playlist_manager.authenticate()  # Authenticate with OAuth
+    PLAYLIST_ID = "PLmPwAQy0bOJZ3U_u5BGeFC1fE2FvzZ9Yp" #this is my specific playlist ID "change it to your own"
+    playlist_manager = PlaylistManager()
+    playlist_manager.authenticate()
 
-    # Fetch playlist items
     playlistItems = playlist_manager.get_playlist_items(PLAYLIST_ID)
 
     data = []
@@ -79,19 +77,14 @@ def main():
         title = item["snippet"]["title"]
         video_id = item["contentDetails"]["videoId"]
 
-        # Parse artist and song from title
         artist, song = parse_video_title(title)
 
-        # Append to data list
         data.append([title, video_id, artist if artist else "Unknown", song])
 
-    # Create DataFrame
     df = pd.DataFrame(data, columns=["Title", "Video ID", "Artist", "Song"])
 
-    # File path
     file_path = "playlist_data.csv"
 
-    # Write to CSV file only if it doesn't already exist
     if not os.path.exists(file_path):
         df.to_csv(file_path, index=False, encoding="utf-8")
         print(f"Playlist data written to '{file_path}' successfully.")

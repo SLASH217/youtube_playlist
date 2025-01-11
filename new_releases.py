@@ -28,7 +28,7 @@ class AutomateNew(YouTubeAPIManager):
                     part="snippet,contentDetails",
                     playlistId=playlist_id,
                     maxResults=50,  # Max 50 results per request
-                    pageToken=page_token,  # Fetch all items using pagination
+                    pageToken=page_token,
                 )
                 response = request.execute()
                 items.extend(response.get("items", []))
@@ -72,7 +72,6 @@ class AutomateNew(YouTubeAPIManager):
 
     def add_new_songs(self, from_playlist_id, to_playlist_id, number_of_songs_to_add):
         """Add songs from `from_playlist_id` to `to_playlist_id` if they are not already in the target playlist."""
-        # Get source playlist items
         from_playlist_items = self.get_playlist_items(from_playlist_id)
         if not from_playlist_items:
             logger.error(
@@ -81,7 +80,6 @@ class AutomateNew(YouTubeAPIManager):
             )
             return
 
-        # Get target playlist items
         to_playlist_items = self.get_playlist_items(to_playlist_id)
         if not to_playlist_items:
             logger.error(
@@ -90,12 +88,10 @@ class AutomateNew(YouTubeAPIManager):
             )
             return
 
-        # Extract video IDs of the songs already in the target playlist
         to_playlist_video_ids = {
             item["contentDetails"]["videoId"] for item in to_playlist_items
         }
 
-        # Filter the songs that are not already in the target playlist
         new_songs = [
             item
             for item in from_playlist_items
@@ -110,7 +106,6 @@ class AutomateNew(YouTubeAPIManager):
             )
             return
 
-        # Limit the number of new songs to add based on the user-specified number
         songs_to_add = new_songs[:number_of_songs_to_add]
 
         for item in songs_to_add:
@@ -132,9 +127,8 @@ def main():
 
     try:
         youtube_manager = AutomateNew()
-        youtube_manager.authenticate()  # Ensure authentication
+        youtube_manager.authenticate()
 
-        # Add only new songs that are not already in the playlist, up to the limit
         youtube_manager.add_new_songs(
             FROM_PLAYLIST_ID, PLAYLIST_ID, NUMBER_OF_SONGS_TO_ADD
         )

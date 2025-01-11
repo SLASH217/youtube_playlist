@@ -32,7 +32,6 @@ class YouTubeAPIManager:
         Authenticate the user with OAuth 2.0 and refresh the token if expired.
         """
         if os.path.exists(self.token_file):
-            # Load credentials from token file
             with open(self.token_file, "r", encoding="utf-8") as token:
                 info = json.load(token)
                 self.credentials = (
@@ -41,7 +40,6 @@ class YouTubeAPIManager:
                     )
                 )
 
-            # Check if token is expired and refresh if necessary
             if (
                 self.credentials
                 and self.credentials.expired
@@ -49,7 +47,6 @@ class YouTubeAPIManager:
             ):
                 try:
                     self.credentials.refresh(google.auth.transport.requests.Request())
-                    # Save the refreshed token back to the file
                     with open(self.token_file, "w", encoding="utf-8") as token:
                         token.write(self.credentials.to_json())
                     print("Token refreshed successfully.")
@@ -57,9 +54,8 @@ class YouTubeAPIManager:
                     print(f"Error refreshing token: {e}")
                     self._run_auth_flow()
             elif not self.credentials.valid:
-                self._run_auth_flow()  # Run the authentication flow if credentials are not valid
+                self._run_auth_flow()
         else:
-            # If token file doesn't exist, run the auth flow
             self._run_auth_flow()
 
         # Build the YouTube service
@@ -71,13 +67,11 @@ class YouTubeAPIManager:
         """
         Runs the OAuth 2.0 flow and saves new credentials to the token file.
         """
-        # Start the OAuth flow to get new credentials
         flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
             self.credentials_file, self.scopes
         )
         self.credentials = flow.run_local_server(port=0)
 
-        # Save the new credentials to the token file
         with open(self.token_file, "w", encoding="utf-8") as token:
             token.write(self.credentials.to_json())
         print("New token obtained and saved.")
